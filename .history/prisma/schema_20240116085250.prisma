@@ -1,0 +1,45 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 String       @id @default(auto()) @map("_id") @db.ObjectId
+  username           String?  @unique
+  email              String       @unique
+  password           String
+  isModerator        Boolean      @default(false)
+  deletedDiscussions Discussion[] @relation("UserOnDeleteDiscussion")
+  deletedReplies     Reply[]      @relation("UserOnDeleteReply")
+  Discussions         Discussion[] 
+  Replies             Reply[]
+}
+
+model Discussion {
+  id          String  @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description     String
+  author      User    @relation(fields: [authorId], references: [id])
+  authorId   String @db.ObjectId 
+  deletedBy   User?   @relation("UserOnDeleteDiscussion", fields: [deletedById], references: [id])
+  deletedById String? @db.ObjectId
+  replies       Reply[] 
+}
+
+model Reply {
+  id           String     @id @default(auto()) @map("_id") @db.ObjectId
+  content      String
+  author       User       @relation(fields: [authorId], references: [id])
+  authorId     String     @db.ObjectId
+  discussion   Discussion @relation(fields: [discussionId], references: [id])
+  discussionId String     @db.ObjectId
+  deletedBy    User?      @relation("UserOnDeleteReply", fields: [deletedById], references: [id])
+  deletedById  String?    @db.ObjectId
+}
